@@ -7,6 +7,7 @@
 ```text
 .
 ├── server.mjs                 # BFF：聚合测试环境主题团接口
+├── cloud-functions/           # EdgeOne Pages Functions：线上 API + KV 备注存储
 ├── src/
 │   ├── App.tsx                # 直接渲染主题团看板
 │   ├── main.tsx
@@ -61,6 +62,69 @@ https://test-gds.songtsam.com/product-journey/api/travelGroup/listTravelGroupDas
 SONGTSAM_THEME_GROUP_DASHBOARD_URL=...
 ```
 
+## EdgeOne 部署
+
+这个项目线上不能只部署静态 `dist/`，因为页面会请求同域 API：
+
+```text
+/api/theme-groups/dashboard
+/api/theme-groups/remarks/update
+/api/theme-groups/remarks/logs
+```
+
+已提供 EdgeOne Pages Functions：
+
+```text
+cloud-functions/api/[[default]].js
+```
+
+部署到 EdgeOne 时需要：
+
+1. 连接 GitHub 仓库并按 Vite 项目构建：
+
+```bash
+npm install
+npm run build
+```
+
+构建产物目录：
+
+```text
+dist
+```
+
+2. 在 EdgeOne 绑定 KV 存储，变量名使用任意一个即可：
+
+```text
+theme_group_kv
+THEME_GROUP_KV
+my_kv
+```
+
+推荐使用：
+
+```text
+theme_group_kv
+```
+
+3. 如需替换看板数据源，在 EdgeOne 环境变量里配置：
+
+```text
+SONGTSAM_THEME_GROUP_DASHBOARD_URL=...
+```
+
+默认数据源：
+
+```text
+https://test-gds.songtsam.com/product-journey/api/travelGroup/listTravelGroupDashboard
+```
+
 ## 备注功能状态
 
-当前备注仍是前端内存 demo 逻辑，刷新后会丢。要变成持久化，建议下一步在 `server.mjs` 里加 JSON 文件存储或正式数据库接口，再替换 `src/theme-groups/api.ts` 里的 `updateThemeGroupRemark` 和 `fetchThemeGroupRemarkLogs`。
+本地开发时备注写入 `data/theme-group-remarks.json`。
+
+EdgeOne 部署时备注和日志写入绑定的 KV，存储 key 为：
+
+```text
+theme_group_remarks
+```
