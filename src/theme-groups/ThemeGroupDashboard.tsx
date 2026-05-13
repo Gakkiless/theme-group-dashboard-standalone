@@ -267,7 +267,7 @@ export default function ThemeGroupDashboard() {
                   <Th className="w-[120px]">已收人数</Th>
                   <Th className="w-[120px]">余位人数</Th>
                   <Th className="w-[180px]">余位房间</Th>
-                  <Th className="w-[190px]">拼住/特殊房型等</Th>
+                  <Th>待拼情况</Th>
                   <Th className="w-[120px]">负责顾问</Th>
                   <Th className="w-[120px]">团期状态</Th>
                   <Th className="w-[136px]">团单状态</Th>
