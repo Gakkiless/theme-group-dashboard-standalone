@@ -7,7 +7,7 @@
 ```text
 .
 ├── server.mjs                 # BFF：聚合测试环境主题团接口
-├── cloud-functions/           # EdgeOne Pages Functions：线上 API + KV 备注存储
+├── functions/                 # EdgeOne Pages Functions：线上 API + KV 备注存储
 ├── src/
 │   ├── App.tsx                # 直接渲染主题团看板
 │   ├── main.tsx
@@ -75,7 +75,7 @@ SONGTSAM_THEME_GROUP_DASHBOARD_URL=...
 已提供 EdgeOne Pages Functions：
 
 ```text
-cloud-functions/api/[[default]].js
+functions/api/[[default]].js
 ```
 
 部署到 EdgeOne 时需要：
