@@ -261,7 +261,7 @@ export default function ThemeGroupDashboard() {
                   <Th className="sticky left-0 z-30 w-[320px]">产品名称</Th>
                   <Th className="w-[230px]">团单号</Th>
                   <Th className="w-[132px]">出发日期</Th>
-                  <Th className="w-[180px]">价格/元/人</Th>
+                  <Th>价格/元/人</Th>
                   <Th className="w-[126px]">单房差</Th>
                   <Th className="w-[190px]">预分配房间资源</Th>
                   <Th className="w-[120px]">已收人数</Th>
@@ -306,7 +306,7 @@ export default function ThemeGroupDashboard() {
                         ) : null}
                         <Td mono>{departure.orderNo}</Td>
                         <Td strong>{formatShortDate(departure.departureDate)}</Td>
-                        <Td strong>
+                        <Td strong className="whitespace-nowrap">
                           <PriceCell departure={departure} />
                         </Td>
                         <Td>{formatMoney(departure.singleRoomSupplement)}</Td>
@@ -755,16 +755,18 @@ function Td({
   children,
   strong = false,
   mono = false,
+  className = "",
 }: {
   children: ReactNode;
   strong?: boolean;
   mono?: boolean;
+  className?: string;
 }) {
   return (
     <td
       className={`border-b border-r border-[#d8dde3] px-4 py-3 align-middle leading-6 ${strong ? "font-semibold" : ""} ${
         mono ? "whitespace-nowrap font-mono" : ""
-      }`}
+      } ${className}`}
     >
       {children}
     </td>
