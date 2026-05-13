@@ -251,7 +251,7 @@ export default function ThemeGroupDashboard() {
                   <Th className="sticky left-0 z-30 w-[320px]">产品名称</Th>
                   <Th className="w-[230px]">团单号</Th>
                   <Th className="w-[132px]">出发日期</Th>
-                  <Th className="w-[132px]">价格/元/人</Th>
+                  <Th className="w-[180px]">价格/元/人</Th>
                   <Th className="w-[126px]">单房差</Th>
                   <Th className="w-[190px]">预分配房间资源</Th>
                   <Th className="w-[120px]">已收人数</Th>
@@ -539,9 +539,9 @@ function RemarkButton({ value, onClick }: { value: string; onClick: () => void }
     <button
       type="button"
       onClick={onClick}
-      className="block min-h-10 w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-left text-base leading-6 text-[#1f2428] transition hover:border-[#a43127] hover:bg-[#fff8f6]"
+      className="block min-h-8 w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-left text-base leading-5 text-[#1f2428] transition hover:border-[#a43127] hover:bg-[#fff8f6]"
     >
-      {value ? <span className="line-clamp-3">{value}</span> : <span className="text-[#a43127]">添加备注</span>}
+      {value ? <span className="line-clamp-3">{value}</span> : <span className="whitespace-nowrap text-[#a43127]">添加</span>}
     </button>
   );
 }
