@@ -71,6 +71,7 @@ export type ThemeGroupFilters = {
   themes: string[];
   orderStatuses: string[];
   showPastDepartures: boolean;
+  showWaitShareOnly: boolean;
 };
 
 export type ThemeGroupSortKey = "departureDate" | "price" | "receivedGuests" | "remainingGuests" | "updatedAt";

@@ -467,7 +467,7 @@ async function handleUpdateRemark(req, res) {
       source: "theme-group-dashboard",
     };
 
-    store.logs = [log, ...store.logs].slice(0, 1000);
+    store.logs = [log, ...store.logs].slice(0, 5);
     await writeRemarkStore(store);
 
     return jsonResponse(res, 200, {

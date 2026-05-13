@@ -30,6 +30,7 @@ const defaultFilters: ThemeGroupFilters = {
   themes: [],
   orderStatuses: [],
   showPastDepartures: false,
+  showWaitShareOnly: false,
 };
 
 const orderStatusText: Record<OrderStatus, string> = {
@@ -240,6 +241,15 @@ export default function ThemeGroupDashboard() {
                   className="h-4 w-4 accent-[#a43127]"
                 />
                 展示历史团期
+              </label>
+              <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127]">
+                <input
+                  type="checkbox"
+                  checked={filters.showWaitShareOnly}
+                  onChange={(event) => setFilters((current) => ({ ...current, showWaitShareOnly: event.target.checked }))}
+                  className="h-4 w-4 accent-[#a43127]"
+                />
+                仅显示待拼团
               </label>
             </div>
           </div>
@@ -785,6 +795,7 @@ function buildGroupedProducts(
           const dateMatches = !filters.departureDate || departure.departureDate === filters.departureDate;
           const openedMatches = departure.departureStatus === "opened";
           const historyMatches = filters.showPastDepartures || departure.departureDate >= today;
+          const waitShareMatches = !filters.showWaitShareOnly || Boolean(departure.roomingText);
           const orderStatusLabel = getOrderStatusLabel(departure);
           const orderStatusMatches = filters.orderStatuses.length === 0 || filters.orderStatuses.includes(orderStatusLabel);
 
@@ -793,6 +804,7 @@ function buildGroupedProducts(
             dateMatches &&
             openedMatches &&
             historyMatches &&
+            waitShareMatches &&
             orderStatusMatches
           );
         })
