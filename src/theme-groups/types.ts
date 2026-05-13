@@ -40,6 +40,7 @@ export type ThemeGroupDeparture = {
   receivedGuests: number;
   remainingGuests: number;
   remainingRooms: string;
+  roomingText: string;
   roomingRemark: string;
   consultant: string;
   orderNo: string;

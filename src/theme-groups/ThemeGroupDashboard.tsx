@@ -307,19 +307,7 @@ export default function ThemeGroupDashboard() {
                           <RemainingRooms value={departure.remainingRooms} />
                         </Td>
                         <Td>
-                          <RemarkButton
-                            value={departure.roomingRemark}
-                            onClick={() =>
-                              openRemarkEditor({
-                                objectType: "departure",
-                                objectId: departure.id,
-                                fieldName: "roomingRemark",
-                                title: "编辑拼住/特殊房型备注",
-                                currentValue: departure.roomingRemark,
-                                context: `${product.name} / ${formatShortDate(departure.departureDate)} / ${departure.orderNo}`,
-                              })
-                            }
-                          />
+                          <WaitShareInfo value={departure.roomingText} />
                         </Td>
                         <Td>{departure.consultant}</Td>
                         <Td>
@@ -576,6 +564,17 @@ function RemainingRooms({ value }: { value: string }) {
   if (!value) return null;
   return (
     <div className="space-y-1 leading-5">
+      {value.split("；").map((item) => (
+        <p key={item}>{item}</p>
+      ))}
+    </div>
+  );
+}
+
+function WaitShareInfo({ value }: { value: string }) {
+  if (!value) return null;
+  return (
+    <div className="space-y-1 leading-6">
       {value.split("；").map((item) => (
         <p key={item}>{item}</p>
       ))}

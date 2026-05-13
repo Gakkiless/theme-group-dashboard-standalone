@@ -284,6 +284,19 @@ function formatDashboardRoomInventory(row) {
   return `${dcfAvailNum}大${scfAvailNum}双`;
 }
 
+function formatWaitShare(row) {
+  const man = numberValue(row, ["waitShareMan"], 0);
+  const woman = numberValue(row, ["waitShareWoman"], 0);
+  const unknown = numberValue(row, ["waitShareUnknown"], 0);
+  return [
+    man > 0 ? `单男待拼：${man}` : "",
+    woman > 0 ? `单女待拼：${woman}` : "",
+    unknown > 0 ? `未知性别待拼：${unknown}` : "",
+  ]
+    .filter(Boolean)
+    .join("；");
+}
+
 function isExcludedThemeGroupRow(row) {
   const title = String(firstValue(row, ["title", "travelTypeDesc", "productName"], ""));
   const travelGroupCode = String(firstValue(row, ["travelGroupCode", "groupCode"], ""));
@@ -343,6 +356,7 @@ function mapRowsToProducts(rows) {
       receivedGuests: numberValue(row, ["productSoldNum"], 0),
       remainingGuests: numberValue(row, ["productAvailNum"], 0),
       remainingRooms: formatDashboardRoomInventory(row),
+      roomingText: formatWaitShare(row),
       roomingRemark: "",
       consultant: String(firstValue(row, ["counselorName"], "")),
       orderNo,
