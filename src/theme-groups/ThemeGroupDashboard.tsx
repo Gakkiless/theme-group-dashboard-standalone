@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  ArrowRight,
+  Hotel,
   History,
   Loader2,
   Save,
@@ -221,6 +223,8 @@ export default function ThemeGroupDashboard() {
       <section className="mx-auto max-w-[1920px] px-6 py-5">
         {error ? <div className="mb-4 rounded-lg border border-[#f1c4bf] bg-[#fff6f4] px-4 py-3 text-base text-[#a43127]">{error}</div> : null}
 
+        <HotelInventoryEntryCard />
+
         <div className="overflow-hidden rounded-xl border border-[#d8dde3] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
           {loading ? (
             <div className="h-1 overflow-hidden bg-[#f2dedb]">
@@ -417,6 +421,31 @@ function ProductCell({ product, onEdit }: { product: ThemeGroupProduct; onEdit: 
         />
       </div>
     </div>
+  );
+}
+
+function HotelInventoryEntryCard() {
+  return (
+    <a
+      href="/hotel-inventory"
+      className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#d8dde3] bg-white px-5 py-4 text-[#1f2428] shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[#c9d0d8] hover:shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
+    >
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fff8f6] text-[#a43127]">
+          <Hotel className="h-5 w-5" />
+        </span>
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-lg font-semibold leading-6 text-[#15191d]">查询酒店库存</h2>
+            <p className="mt-1 text-sm text-[#7b838c]">进入独立页面后按入住日期、酒店、房型查询库存与价格</p>
+          </div>
+        </div>
+      </div>
+      <div className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c]">
+        进入查询
+        <ArrowRight className="h-4 w-4" />
+      </div>
+    </a>
   );
 }
 

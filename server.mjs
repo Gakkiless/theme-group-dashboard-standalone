@@ -504,8 +504,17 @@ async function handleRemarkLogs(req, res) {
 async function serveFile(res, pathname) {
   const target = pathname === "/" ? "/index.html" : pathname;
   const filePath = join(__dirname, "dist", target.replace(/^\/+/, ""));
-  const data = await readFile(filePath);
   const contentType = MIME_TYPES[extname(filePath)] || "text/plain; charset=utf-8";
+  let data;
+  try {
+    data = await readFile(filePath);
+  } catch (error) {
+    if (extname(pathname)) throw error;
+    data = await readFile(join(__dirname, "dist", "index.html"));
+    res.writeHead(200, { "Content-Type": MIME_TYPES[".html"] });
+    res.end(data);
+    return;
+  }
   res.writeHead(200, { "Content-Type": contentType });
   res.end(data);
 }
