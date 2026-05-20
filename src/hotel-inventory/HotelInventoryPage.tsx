@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Hotel, Search } from "lucide-react";
+import AuthLogoutButton from "../components/AuthLogoutButton";
 
 type HotelInventoryFilters = {
   checkInStart: string;
@@ -66,14 +67,17 @@ export default function HotelInventoryPage() {
             <ArrowLeft className="h-4 w-4" />
             返回主题团看板
           </a>
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff8f6] text-[#a43127]">
-              <Hotel className="h-6 w-6" />
-            </span>
-            <div>
-              <h1 className="text-[30px] font-semibold tracking-normal text-[#15191d]">查询酒店库存</h1>
-              <p className="mt-1 text-base text-[#7b838c]">按入住日期、酒店、房型查询库存与价格</p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff8f6] text-[#a43127]">
+                <Hotel className="h-6 w-6" />
+              </span>
+              <div>
+                <h1 className="text-[30px] font-semibold tracking-normal text-[#15191d]">查询酒店库存</h1>
+                <p className="mt-1 text-base text-[#7b838c]">按入住日期、酒店、房型查询库存与价格</p>
+              </div>
             </div>
+            <AuthLogoutButton />
           </div>
 
           <section className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">

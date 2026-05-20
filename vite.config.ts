@@ -6,6 +6,10 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://127.0.0.1:3000",
+      "/auth-center": {
+        target: "https://test-api.songtsam.com",
+        changeOrigin: true,
+      },
     },
   },
 });

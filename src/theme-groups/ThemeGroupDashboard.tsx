@@ -14,6 +14,7 @@ import {
   fetchThemeGroupRemarkLogs,
   updateThemeGroupRemark,
 } from "./api";
+import AuthLogoutButton from "../components/AuthLogoutButton";
 import type {
   DepartureStatus,
   OrderStatus,
@@ -166,6 +167,7 @@ export default function ThemeGroupDashboard() {
             <div>
               <h1 className="text-[30px] font-semibold tracking-normal text-[#15191d]">松赞在售主题团看板</h1>
             </div>
+            <AuthLogoutButton />
           </div>
 
           <section className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
