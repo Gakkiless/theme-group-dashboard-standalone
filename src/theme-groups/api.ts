@@ -1,3 +1,4 @@
+import { auth } from "../auth";
 import type { RemarkField, ThemeGroupDeparture, ThemeGroupFilters, ThemeGroupLog, ThemeGroupProduct, UpdateRemarkInput } from "./types";
 
 let productsStore: ThemeGroupProduct[] = [];
@@ -92,11 +93,8 @@ export async function fetchThemeGroupInventory(_params?: Partial<ThemeGroupFilte
 }
 
 export async function fetchThemeGroupDashboard(params?: Partial<ThemeGroupFilters>) {
-  const response = await fetch("/api/theme-groups/dashboard", {
+  const payload = await auth.fetch<ThemeGroupDashboardResponse>("/api/theme-groups/dashboard", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({
       filters: params || {},
       firstResult: 0,
@@ -104,44 +102,35 @@ export async function fetchThemeGroupDashboard(params?: Partial<ThemeGroupFilter
     }),
   });
 
-  const payload = (await response.json().catch(() => ({}))) as ThemeGroupDashboardResponse;
-  if (response.ok && payload.ok && Array.isArray(payload.products)) {
+  if (payload.ok && Array.isArray(payload.products)) {
     productsStore = payload.products;
     return structuredClone(productsStore);
   }
 
-  throw new Error(payload.error || `Dashboard request failed: ${response.status}`);
+  throw new Error(payload.error || "Dashboard request failed");
 }
 
 export async function fetchThemeGroupDepartureDetails(travelGroupCodes: string[]) {
-  const response = await fetch("/api/theme-groups/departure-details", {
+  const payload = await auth.fetch<ThemeGroupDepartureDetailsResponse>("/api/theme-groups/departure-details", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({ travelGroupCodes }),
   });
 
-  const payload = (await response.json().catch(() => ({}))) as ThemeGroupDepartureDetailsResponse;
-  if (response.ok && payload.ok && Array.isArray(payload.details)) {
+  if (payload.ok && Array.isArray(payload.details)) {
     return payload.details;
   }
 
-  throw new Error(payload.error || `Departure details request failed: ${response.status}`);
+  throw new Error(payload.error || "Departure details request failed");
 }
 
 export async function updateThemeGroupRemark(input: UpdateRemarkInput) {
-  const response = await fetch("/api/theme-groups/remarks/update", {
+  const payload = await auth.fetch<UpdateRemarkResponse>("/api/theme-groups/remarks/update", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(input),
   });
 
-  const payload = (await response.json().catch(() => ({}))) as UpdateRemarkResponse;
-  if (!response.ok || !payload.ok) {
-    throw new Error(payload.error || `Remark update failed: ${response.status}`);
+  if (!payload.ok) {
+    throw new Error(payload.error || "Remark update failed");
   }
 
   productsStore = productsStore.map((product) => {
@@ -170,20 +159,16 @@ export async function updateThemeGroupRemark(input: UpdateRemarkInput) {
 }
 
 export async function fetchThemeGroupRemarkLogs(objectId?: string) {
-  const response = await fetch("/api/theme-groups/remarks/logs", {
+  const payload = await auth.fetch<RemarkLogsResponse>("/api/theme-groups/remarks/logs", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({ objectId }),
   });
 
-  const payload = (await response.json().catch(() => ({}))) as RemarkLogsResponse;
-  if (response.ok && payload.ok && Array.isArray(payload.logs)) {
+  if (payload.ok && Array.isArray(payload.logs)) {
     return payload.logs;
   }
 
-  throw new Error(payload.error || `Remark logs request failed: ${response.status}`);
+  throw new Error(payload.error || "Remark logs request failed");
 }
 
 function isDepartureRemarkField(fieldName: RemarkField): fieldName is keyof Pick<ThemeGroupDeparture, "salesRemark" | "operationRemark" | "roomingRemark"> {
