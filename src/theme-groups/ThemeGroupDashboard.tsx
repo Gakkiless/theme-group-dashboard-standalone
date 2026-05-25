@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Button, Checkbox, DatePicker, Drawer, Input, Modal, Select, Table, Tag } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { Button, Card, Checkbox, DatePicker, Descriptions, Drawer, Empty, Input, Modal, Select, Skeleton, Tag } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import {
   ArrowRight,
@@ -367,7 +366,7 @@ export default function ThemeGroupDashboard() {
               )}
             </table>
           </div>
-          <MobileDepartureTable
+          <MobileProductCards
             loading={loading}
             products={groupedProducts}
             onEdit={openRemarkEditor}
@@ -435,13 +434,7 @@ function ProductCell({ product, onEdit }: { product: ThemeGroupProduct; onEdit: 
   );
 }
 
-type MobileDepartureTableRow = {
-  key: string;
-  product: GroupedProduct;
-  departure: ThemeGroupDeparture;
-};
-
-function MobileDepartureTable({
+function MobileProductCards({
   loading,
   products,
   onEdit,
@@ -450,106 +443,146 @@ function MobileDepartureTable({
   products: GroupedProduct[];
   onEdit: (remark: EditableRemark) => void;
 }) {
-  const rows = products.flatMap((product) => product.departures.map((departure) => ({ key: departure.id, product, departure })));
-  const columns: ColumnsType<MobileDepartureTableRow> = [
-    {
-      title: "产品",
-      width: 260,
-      fixed: "left",
-      render: (_, row) => (
-        <div className="min-w-[220px]">
-          <div className="mb-1 flex flex-wrap gap-1">
-            <Tag>{row.product.businessType}</Tag>
-            {row.product.seriesDesc ? <Tag color="red">{row.product.seriesDesc}</Tag> : null}
+  if (loading) {
+    return (
+      <div className="space-y-3 bg-[#f5f7fb] p-3 lg:hidden">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="shadow-[0_8px_22px_rgba(15,23,42,0.06)]">
+            <Skeleton active paragraph={{ rows: 5 }} />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return (
+      <div className="bg-white px-4 py-14 lg:hidden">
+        <Empty description="没有匹配的主题团" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 bg-[#f5f7fb] p-3 lg:hidden">
+      {products.map((product) => (
+        <Card
+          key={product.id}
+          className="overflow-hidden shadow-[0_8px_22px_rgba(15,23,42,0.06)]"
+          styles={{ body: { padding: 0 } }}
+        >
+          <div className="border-b border-[#eef0f3] p-4">
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              <Tag>{product.businessType}</Tag>
+              {product.seriesDesc ? <Tag color="red">{product.seriesDesc}</Tag> : null}
+              {product.themeDesc ? <Tag color="green">{product.themeDesc}</Tag> : null}
+            </div>
+            <h2 className="text-lg font-semibold leading-7 text-[#15191d]">{product.name}</h2>
+            <p className="mt-2 font-mono text-base text-[#15191d]">{product.productCode}</p>
+            <div className="mt-3 rounded-lg bg-[#fafbfc] p-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-sm font-medium text-[#6d747c]">产品备注</span>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() =>
+                    onEdit({
+                      objectType: "product",
+                      objectId: product.id,
+                      fieldName: "productRemark",
+                      title: "编辑产品备注",
+                      currentValue: product.productRemark,
+                      context: `${product.name} / ${product.productCode}`,
+                    })
+                  }
+                >
+                  {product.productRemark ? "编辑" : "添加"}
+                </Button>
+              </div>
+              <p className="min-h-5 whitespace-pre-wrap text-sm leading-6 text-[#1f2428]">{product.productRemark || "暂无备注"}</p>
+            </div>
           </div>
-          <p className="mb-1 whitespace-normal text-sm font-semibold leading-5 text-[#15191d]">{row.product.name}</p>
-          <p className="font-mono text-xs text-[#6d747c]">{row.product.productCode}</p>
+          <div className="divide-y divide-[#eef0f3]">
+            {product.departures.map((departure) => (
+              <MobileDepartureBlock key={departure.id} product={product} departure={departure} onEdit={onEdit} />
+            ))}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function MobileDepartureBlock({
+  product,
+  departure,
+  onEdit,
+}: {
+  product: GroupedProduct;
+  departure: ThemeGroupDeparture;
+  onEdit: (remark: EditableRemark) => void;
+}) {
+  return (
+    <article className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="break-all font-mono text-base font-semibold text-[#15191d]">{departure.orderNo}</p>
+          <p className="mt-1 text-sm text-[#7b838c]">{formatShortDate(departure.departureDate)} 出发</p>
         </div>
-      ),
-    },
-    {
-      title: "团单号",
-      dataIndex: ["departure", "orderNo"],
-      width: 170,
-      render: (value: string) => <span className="font-mono">{value}</span>,
-    },
-    {
-      title: "出发日期",
-      width: 110,
-      render: (_, row) => formatShortDate(row.departure.departureDate),
-    },
-    {
-      title: "价格",
-      width: 180,
-      render: (_, row) => <PriceCell departure={row.departure} />,
-    },
-    {
-      title: "余位",
-      width: 90,
-      render: (_, row) => row.departure.remainingGuests,
-    },
-    {
-      title: "房间",
-      width: 140,
-      render: (_, row) => <RemainingRooms value={row.departure.remainingRooms} />,
-    },
-    {
-      title: "待拼",
-      width: 150,
-      render: (_, row) => row.departure.roomingText ? <WaitShareInfo value={row.departure.roomingText} /> : "-",
-    },
-    {
-      title: "顾问",
-      width: 100,
-      render: (_, row) => row.departure.consultant || "-",
-    },
-    {
-      title: "状态",
-      width: 120,
-      render: (_, row) => (
-        <div className="flex flex-col gap-1">
-          <DepartureStatusBadge departure={row.departure} />
-          <OrderStatusBadge departure={row.departure} />
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <DepartureStatusBadge departure={departure} />
+          <OrderStatusBadge departure={departure} />
         </div>
-      ),
-    },
-    {
-      title: "备注",
-      width: 120,
-      fixed: "right",
-      render: (_, row) => (
+      </div>
+
+      <Descriptions
+        className="mt-4"
+        size="small"
+        column={2}
+        colon={false}
+        labelStyle={{ color: "#7b838c", fontSize: 12 }}
+        contentStyle={{ color: "#1f2428", fontSize: 14, fontWeight: 500 }}
+      >
+        <Descriptions.Item label="价格" span={2}>
+          <PriceCell departure={departure} />
+        </Descriptions.Item>
+        <Descriptions.Item label="余位人数">{departure.remainingGuests}</Descriptions.Item>
+        <Descriptions.Item label="已收人数">{departure.receivedGuests}</Descriptions.Item>
+        <Descriptions.Item label="余位房间" span={2}>
+          <RemainingRooms value={departure.remainingRooms} />
+        </Descriptions.Item>
+        <Descriptions.Item label="预分配房间" span={2}>
+          {departure.allocatedRooms || "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="待拼情况" span={2}>
+          {departure.roomingText ? <WaitShareInfo value={departure.roomingText} /> : "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="负责顾问">{departure.consultant || "-"}</Descriptions.Item>
+        <Descriptions.Item label="单房差">{formatMoney(departure.singleRoomSupplement)}</Descriptions.Item>
+      </Descriptions>
+
+      <div className="mt-4 rounded-lg bg-[#fafbfc] p-3">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-[#6d747c]">备注</span>
+          {departure.updatedAt ? <span className="text-xs text-[#9aa1a9]">{formatDateTime(departure.updatedAt)}</span> : null}
+        </div>
         <Button
-          type="link"
+          block
           onClick={() =>
             onEdit({
               objectType: "departure",
-              objectId: row.departure.id,
+              objectId: departure.id,
               fieldName: "operationRemark",
               title: "编辑备注",
-              currentValue: row.departure.operationRemark,
-              context: `${row.product.name} / ${formatShortDate(row.departure.departureDate)} / ${row.departure.orderNo}`,
+              currentValue: departure.operationRemark,
+              context: `${product.name} / ${formatShortDate(departure.departureDate)} / ${departure.orderNo}`,
             })
           }
         >
-          {row.departure.operationRemark ? "查看/编辑" : "添加"}
+          {departure.operationRemark ? "查看/编辑备注" : "添加"}
         </Button>
-      ),
-    },
-  ];
-
-  return (
-    <div className="bg-white lg:hidden">
-      <Table
-        rowKey="key"
-        loading={loading}
-        columns={columns}
-        dataSource={rows}
-        pagination={false}
-        scroll={{ x: 1450 }}
-        locale={{ emptyText: "没有匹配的主题团" }}
-        size="small"
-      />
-    </div>
+      </div>
+    </article>
   );
 }
 
