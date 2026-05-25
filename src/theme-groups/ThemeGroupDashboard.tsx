@@ -162,18 +162,18 @@ export default function ThemeGroupDashboard() {
   return (
     <main className="min-h-screen bg-[#f5f7fb] text-[#1f2428]">
       <header className="border-b border-[#e5e7eb] bg-white">
-        <div className="mx-auto flex max-w-[1920px] flex-col gap-5 px-6 py-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="mx-auto flex max-w-[1920px] flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-[30px] font-semibold tracking-normal text-[#15191d]">松赞在售主题团看板</h1>
+              <h1 className="text-2xl font-semibold tracking-normal text-[#15191d] sm:text-[30px]">松赞在售主题团看板</h1>
             </div>
             <AuthLogoutButton />
           </div>
 
-          <section className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+          <section className="rounded-lg border border-[#e5e7eb] bg-white p-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] sm:p-4">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="relative min-w-[360px] flex-1">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <label className="relative min-w-0 flex-1 sm:min-w-[360px]">
                   <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6b7280]" />
                   <input
                     value={filters.keyword}
@@ -185,7 +185,7 @@ export default function ThemeGroupDashboard() {
                 <button
                   type="button"
                   onClick={() => setFilters(defaultFilters)}
-                  className="inline-flex h-12 items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127]"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127] sm:w-auto"
                 >
                   <X className="h-4 w-4" />
                   重置
@@ -222,23 +222,23 @@ export default function ThemeGroupDashboard() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-[1920px] px-6 py-5">
+      <section className="mx-auto max-w-[1920px] px-4 py-4 sm:px-6 sm:py-5">
         {error ? <div className="mb-4 rounded-lg border border-[#f1c4bf] bg-[#fff6f4] px-4 py-3 text-base text-[#a43127]">{error}</div> : null}
 
         <HotelInventoryEntryCard />
 
-        <div className="overflow-hidden rounded-xl border border-[#d8dde3] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+        <div className="overflow-hidden bg-transparent lg:rounded-lg lg:border lg:border-[#d8dde3] lg:bg-white lg:shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
           {loading ? (
             <div className="h-1 overflow-hidden bg-[#f2dedb]">
               <div className="theme-group-loading-bar h-full bg-[#a43127]" />
             </div>
           ) : null}
-          <div className="flex items-center justify-between border-b border-[#e3e5e8] px-4 py-3">
+          <div className="flex flex-col gap-3 rounded-lg border border-[#e3e5e8] bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:rounded-none lg:border-x-0 lg:border-t-0">
             <div className="flex items-center gap-2 text-base font-semibold">
               <SlidersHorizontal className="h-5 w-5 text-[#a43127]" />
               产品团期表
             </div>
-            <div className="flex items-center gap-2 text-base">
+            <div className="flex flex-col gap-2 text-base sm:flex-row sm:items-center">
               <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127]">
                 <input
                   type="checkbox"
@@ -260,7 +260,7 @@ export default function ThemeGroupDashboard() {
             </div>
           </div>
 
-          <div className="max-h-[calc(100vh-260px)] min-h-[520px] overflow-auto">
+          <div className="hidden max-h-[calc(100vh-260px)] min-h-[520px] overflow-auto lg:block">
             <table className="min-w-[1850px] border-separate border-spacing-0 text-left text-base">
               <thead className="sticky top-0 z-20 bg-white text-[#1f2428]">
                 <tr>
@@ -363,6 +363,11 @@ export default function ThemeGroupDashboard() {
               )}
             </table>
           </div>
+          <MobileProductList
+            loading={loading}
+            products={groupedProducts}
+            onEdit={openRemarkEditor}
+          />
         </div>
       </section>
 
@@ -426,11 +431,154 @@ function ProductCell({ product, onEdit }: { product: ThemeGroupProduct; onEdit: 
   );
 }
 
+function MobileProductList({
+  loading,
+  products,
+  onEdit,
+}: {
+  loading: boolean;
+  products: GroupedProduct[];
+  onEdit: (remark: EditableRemark) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-5 py-10 text-center text-[#6d747c] lg:hidden">
+        <span className="flex h-14 w-14 items-center justify-center rounded-lg border border-[#f1c4bf] bg-[#fff8f6]">
+          <Loader2 className="h-6 w-6 animate-spin text-[#a43127]" />
+        </span>
+        <div>
+          <p className="font-medium text-[#1f2428]">正在拉取 2026 年主题团团期</p>
+          <p className="mt-1 text-sm text-[#7b838c]">接口数据量较大，正在自动分页聚合</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return <div className="min-h-[260px] px-5 py-16 text-center text-base text-[#7b838c] lg:hidden">没有匹配的主题团</div>;
+  }
+
+  return (
+    <div className="space-y-3 bg-[#f5f7fb] p-3 lg:hidden">
+      {products.map((product) => (
+        <section key={product.id} className="overflow-hidden rounded-lg border border-[#e3e5e8] bg-white">
+          <div className="border-b border-[#eef0f3] p-4">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="rounded bg-[#f5f6f8] px-2 py-1 text-xs text-[#6d747c]">{product.businessType}</span>
+              {product.seriesDesc ? <span className="rounded bg-[#fff8f6] px-2 py-1 text-xs text-[#a43127]">{product.seriesDesc}</span> : null}
+            </div>
+            <h2 className="text-lg font-semibold leading-7 text-[#15191d]">{product.name}</h2>
+            <div className="mt-2 space-y-1 text-sm leading-6 text-[#6d747c]">
+              <p className="font-mono text-base text-[#15191d]">{product.productCode}</p>
+              {product.themeDesc ? <p>产品主题：{product.themeDesc}</p> : null}
+            </div>
+            <div className="mt-3">
+              <p className="mb-1 text-sm font-medium text-[#6d747c]">产品备注</p>
+              <RemarkButton
+                value={product.productRemark}
+                onClick={() =>
+                  onEdit({
+                    objectType: "product",
+                    objectId: product.id,
+                    fieldName: "productRemark",
+                    title: "编辑产品备注",
+                    currentValue: product.productRemark,
+                    context: `${product.name} / ${product.productCode}`,
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className="divide-y divide-[#eef0f3]">
+            {product.departures.map((departure) => (
+              <MobileDepartureItem
+                key={departure.id}
+                product={product}
+                departure={departure}
+                onEdit={onEdit}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function MobileDepartureItem({
+  product,
+  departure,
+  onEdit,
+}: {
+  product: GroupedProduct;
+  departure: ThemeGroupDeparture;
+  onEdit: (remark: EditableRemark) => void;
+}) {
+  return (
+    <article className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-base font-semibold text-[#15191d]">{departure.orderNo}</p>
+          <p className="mt-1 text-sm text-[#6d747c]">{formatShortDate(departure.departureDate)} 出发</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <DepartureStatusBadge departure={departure} />
+          <OrderStatusBadge departure={departure} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3">
+        <MobileField label="价格">
+          <PriceCell departure={departure} />
+        </MobileField>
+        <MobileField label="单房差">{formatMoney(departure.singleRoomSupplement)}</MobileField>
+        <MobileField label="已收人数">{departure.receivedGuests}</MobileField>
+        <MobileField label="余位人数">{departure.remainingGuests}</MobileField>
+        <MobileField label="预分配房间">{departure.allocatedRooms || "-"}</MobileField>
+        <MobileField label="余位房间">
+          <RemainingRooms value={departure.remainingRooms} />
+        </MobileField>
+        <MobileField label="待拼情况">{departure.roomingText ? <WaitShareInfo value={departure.roomingText} /> : "-"}</MobileField>
+        <MobileField label="负责顾问">{departure.consultant || "-"}</MobileField>
+      </div>
+
+      <div className="mt-4 rounded-lg bg-[#fafbfc] p-3">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <span className="text-sm font-medium text-[#6d747c]">备注</span>
+          {departure.updatedAt ? <span className="text-xs text-[#9aa1a9]">{formatDateTime(departure.updatedAt)}</span> : null}
+        </div>
+        <RemarkButton
+          value={departure.operationRemark}
+          onClick={() =>
+            onEdit({
+              objectType: "departure",
+              objectId: departure.id,
+              fieldName: "operationRemark",
+              title: "编辑备注",
+              currentValue: departure.operationRemark,
+              context: `${product.name} / ${formatShortDate(departure.departureDate)} / ${departure.orderNo}`,
+            })
+          }
+        />
+      </div>
+    </article>
+  );
+}
+
+function MobileField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="mb-1 text-xs text-[#8a929b]">{label}</p>
+      <div className="min-h-6 break-words text-sm font-medium leading-6 text-[#1f2428]">{children ?? "-"}</div>
+    </div>
+  );
+}
+
 function HotelInventoryEntryCard() {
   return (
     <a
       href="/hotel-inventory"
-      className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#d8dde3] bg-white px-5 py-4 text-[#1f2428] shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[#c9d0d8] hover:shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
+      className="mb-4 flex flex-col gap-4 rounded-lg border border-[#d8dde3] bg-white px-4 py-4 text-[#1f2428] shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[#c9d0d8] hover:shadow-[0_12px_30px_rgba(15,23,42,0.1)] sm:mb-5 sm:flex-row sm:items-center sm:justify-between sm:px-5"
     >
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fff8f6] text-[#a43127]">
@@ -443,7 +591,7 @@ function HotelInventoryEntryCard() {
           </div>
         </div>
       </div>
-      <div className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c]">
+      <div className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] sm:w-auto">
         进入查询
         <ArrowRight className="h-4 w-4" />
       </div>

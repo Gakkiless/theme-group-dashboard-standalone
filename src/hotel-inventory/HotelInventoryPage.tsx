@@ -62,25 +62,25 @@ export default function HotelInventoryPage() {
   return (
     <main className="min-h-screen bg-[#f5f7fb] text-[#1f2428]">
       <header className="border-b border-[#e5e7eb] bg-white">
-        <div className="mx-auto flex max-w-[1920px] flex-col gap-5 px-6 py-6">
+        <div className="mx-auto flex max-w-[1920px] flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-6">
           <a href="/theme-groups/dashboard" className="inline-flex w-fit items-center gap-2 text-base text-[#4b535c] hover:text-[#a43127]">
             <ArrowLeft className="h-4 w-4" />
             返回主题团看板
           </a>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff8f6] text-[#a43127]">
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fff8f6] text-[#a43127] sm:h-12 sm:w-12">
                 <Hotel className="h-6 w-6" />
               </span>
               <div>
-                <h1 className="text-[30px] font-semibold tracking-normal text-[#15191d]">查询酒店库存</h1>
+                <h1 className="text-2xl font-semibold tracking-normal text-[#15191d] sm:text-[30px]">查询酒店库存</h1>
                 <p className="mt-1 text-base text-[#7b838c]">按入住日期、酒店、房型查询库存与价格</p>
               </div>
             </div>
             <AuthLogoutButton />
           </div>
 
-          <section className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+          <section className="rounded-lg border border-[#e5e7eb] bg-white p-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] sm:p-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <DateFilterInput
                 label="入住开始日期"
@@ -113,7 +113,7 @@ export default function HotelInventoryPage() {
               <button
                 type="button"
                 disabled
-                className="inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-lg bg-[#a43127] px-5 text-base text-white opacity-50"
+                className="inline-flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-[#a43127] px-5 text-base text-white opacity-50 sm:w-auto"
               >
                 <Search className="h-4 w-4" />
                 查询
@@ -123,15 +123,15 @@ export default function HotelInventoryPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-[1920px] px-6 py-5">
-        <div className="overflow-hidden rounded-xl border border-[#d8dde3] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-          <div className="flex items-center justify-between border-b border-[#e3e5e8] px-4 py-3">
+      <section className="mx-auto max-w-[1920px] px-4 py-4 sm:px-6 sm:py-5">
+        <div className="overflow-hidden bg-transparent lg:rounded-lg lg:border lg:border-[#d8dde3] lg:bg-white lg:shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+          <div className="flex items-center justify-between rounded-lg border border-[#e3e5e8] bg-white px-4 py-3 lg:rounded-none lg:border-x-0 lg:border-t-0">
             <div className="flex items-center gap-2 text-base font-semibold">
               <Hotel className="h-5 w-5 text-[#a43127]" />
               酒店库存表
             </div>
           </div>
-          <div className="overflow-auto">
+          <div className="hidden overflow-auto lg:block">
             <table className="min-w-[1180px] border-separate border-spacing-0 text-left text-base">
               <thead className="bg-white text-[#1f2428]">
                 <tr>
@@ -179,6 +179,7 @@ export default function HotelInventoryPage() {
               )}
             </table>
           </div>
+          <MobileInventoryList rows={filteredRows} />
         </div>
       </section>
     </main>
@@ -248,6 +249,51 @@ function SelectFilter({
         ))}
       </select>
     </label>
+  );
+}
+
+function MobileInventoryList({ rows }: { rows: HotelInventoryRoomGroup[] }) {
+  if (!rows.length) {
+    return <div className="min-h-[260px] px-5 py-16 text-center text-base text-[#7b838c] lg:hidden">暂无酒店库存数据，等待接口接入</div>;
+  }
+
+  return (
+    <div className="space-y-3 bg-[#f5f7fb] p-3 lg:hidden">
+      {rows.map((row) => (
+        <section key={row.id} className="overflow-hidden rounded-lg border border-[#e3e5e8] bg-white">
+          <div className="border-b border-[#eef0f3] p-4">
+            <p className="text-lg font-semibold leading-7 text-[#15191d]">{row.hotelName}</p>
+            <p className="mt-1 text-sm text-[#6d747c]">房型：{row.roomTypeName}</p>
+          </div>
+          <div className="divide-y divide-[#eef0f3]">
+            {row.products.map((product) => (
+              <article key={product.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-semibold leading-6 text-[#15191d]">{product.productName}</p>
+                    <p className="mt-1 text-sm text-[#6d747c]">{product.date}</p>
+                  </div>
+                  <p className="whitespace-nowrap text-base font-semibold text-[#a43127]">{product.price > 0 ? `￥${formatMoney(product.price)}` : "-"}</p>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <MobileField label="公共池剩余">{product.publicPoolRemainingRooms}</MobileField>
+                  <MobileField label="预保留剩余">{product.preReservedRemainingRooms}</MobileField>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function MobileField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs text-[#8a929b]">{label}</p>
+      <div className="text-sm font-medium leading-6 text-[#1f2428]">{children ?? "-"}</div>
+    </div>
   );
 }
 
