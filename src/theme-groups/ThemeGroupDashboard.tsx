@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Button, Card, Checkbox, DatePicker, Descriptions, Drawer, Empty, Input, Modal, Select, Skeleton, Tag } from "antd";
+import { Button, Card, Checkbox, DatePicker, Drawer, Empty, Input, Modal, Select, Skeleton, Tag } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import {
   ArrowRight,
@@ -529,60 +529,79 @@ function MobileDepartureBlock({
           <p className="break-all font-mono text-base font-semibold text-[#15191d]">{departure.orderNo}</p>
           <p className="mt-1 text-sm text-[#7b838c]">{formatShortDate(departure.departureDate)} 出发</p>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <DepartureStatusBadge departure={departure} />
-          <OrderStatusBadge departure={departure} />
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <MobileStatusBadge label="团期状态">
+            <DepartureStatusBadge departure={departure} />
+          </MobileStatusBadge>
+          <MobileStatusBadge label="团单状态">
+            <OrderStatusBadge departure={departure} />
+          </MobileStatusBadge>
         </div>
       </div>
 
-      <Descriptions
-        className="mt-4"
-        size="small"
-        column={2}
-        colon={false}
-        labelStyle={{ color: "#7b838c", fontSize: 12 }}
-        contentStyle={{ color: "#1f2428", fontSize: 14, fontWeight: 500 }}
-      >
-        <Descriptions.Item label="价格" span={2}>
+      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3">
+        <MobileMetricItem label="价格">
           <PriceCell departure={departure} />
-        </Descriptions.Item>
-        <Descriptions.Item label="余位人数">{departure.remainingGuests}</Descriptions.Item>
-        <Descriptions.Item label="已收人数">{departure.receivedGuests}</Descriptions.Item>
-        <Descriptions.Item label="余位房间" span={2}>
+        </MobileMetricItem>
+        <MobileMetricItem label="余位人数">{departure.remainingGuests}</MobileMetricItem>
+        <MobileMetricItem label="预分配房间">{departure.allocatedRooms || "-"}</MobileMetricItem>
+        <MobileMetricItem label="余位房间">
           <RemainingRooms value={departure.remainingRooms} />
-        </Descriptions.Item>
-        <Descriptions.Item label="预分配房间" span={2}>
-          {departure.allocatedRooms || "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="待拼情况" span={2}>
+        </MobileMetricItem>
+        <MobileMetricItem label="已收人数">{departure.receivedGuests}</MobileMetricItem>
+        <MobileMetricItem label="待拼情况">
           {departure.roomingText ? <WaitShareInfo value={departure.roomingText} /> : "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label="负责顾问">{departure.consultant || "-"}</Descriptions.Item>
-        <Descriptions.Item label="单房差">{formatMoney(departure.singleRoomSupplement)}</Descriptions.Item>
-      </Descriptions>
+        </MobileMetricItem>
+        <MobileMetricItem label="负责顾问">{departure.consultant || "-"}</MobileMetricItem>
+        <MobileMetricItem label="单房差">{formatMoney(departure.singleRoomSupplement)}</MobileMetricItem>
+      </div>
 
       <div className="mt-4 rounded-lg bg-[#fafbfc] p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-[#6d747c]">备注</span>
-          {departure.updatedAt ? <span className="text-xs text-[#9aa1a9]">{formatDateTime(departure.updatedAt)}</span> : null}
+          <div>
+            <span className="text-sm font-medium text-[#6d747c]">备注</span>
+            {departure.updatedAt ? <span className="ml-2 text-xs text-[#9aa1a9]">{formatDateTime(departure.updatedAt)}</span> : null}
+          </div>
+          <Button
+            type="link"
+            size="small"
+            onClick={() =>
+              onEdit({
+                objectType: "departure",
+                objectId: departure.id,
+                fieldName: "operationRemark",
+                title: "编辑备注",
+                currentValue: departure.operationRemark,
+                context: `${product.name} / ${formatShortDate(departure.departureDate)} / ${departure.orderNo}`,
+              })
+            }
+          >
+            {departure.operationRemark ? "编辑" : "添加"}
+          </Button>
         </div>
-        <Button
-          block
-          onClick={() =>
-            onEdit({
-              objectType: "departure",
-              objectId: departure.id,
-              fieldName: "operationRemark",
-              title: "编辑备注",
-              currentValue: departure.operationRemark,
-              context: `${product.name} / ${formatShortDate(departure.departureDate)} / ${departure.orderNo}`,
-            })
-          }
-        >
-          {departure.operationRemark ? "查看/编辑备注" : "添加"}
-        </Button>
+        <p className="min-h-5 whitespace-pre-wrap text-sm leading-6 text-[#1f2428]">{departure.operationRemark || "暂无备注"}</p>
       </div>
     </article>
+  );
+}
+
+function MobileStatusBadge({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-[#7b838c]">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function MobileMetricItem({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-lg bg-[#fafbfc] px-2.5 py-2">
+      <div className="flex min-h-6 items-start gap-2">
+        <span className="w-[4.5em] shrink-0 text-sm leading-6 text-[#7b838c]">{label}</span>
+        <div className="min-w-0 flex-1 break-words text-sm font-semibold leading-6 text-[#1f2428]">{children}</div>
+      </div>
+    </div>
   );
 }
 
