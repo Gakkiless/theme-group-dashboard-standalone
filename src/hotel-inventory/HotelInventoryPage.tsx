@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Hotel, Search } from "lucide-react";
 import AuthLogoutButton from "../components/AuthLogoutButton";
+import MobileQrButton from "../components/MobileQrButton";
 
 type HotelInventoryFilters = {
   checkInStart: string;
@@ -69,6 +70,7 @@ export default function HotelInventoryPage() {
           </a>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-4">
+              <MobileQrButton />
               <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fff8f6] text-[#a43127] sm:h-12 sm:w-12">
                 <Hotel className="h-6 w-6" />
               </span>

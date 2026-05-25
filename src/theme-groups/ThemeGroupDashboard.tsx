@@ -15,6 +15,7 @@ import {
   updateThemeGroupRemark,
 } from "./api";
 import AuthLogoutButton from "../components/AuthLogoutButton";
+import MobileQrButton from "../components/MobileQrButton";
 import type {
   DepartureStatus,
   OrderStatus,
@@ -164,7 +165,8 @@ export default function ThemeGroupDashboard() {
       <header className="border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto flex max-w-[1920px] flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <MobileQrButton />
               <h1 className="text-2xl font-semibold tracking-normal text-[#15191d] sm:text-[30px]">松赞在售主题团看板</h1>
             </div>
             <AuthLogoutButton />

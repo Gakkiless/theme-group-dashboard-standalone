@@ -13,12 +13,14 @@
     "@team/auth-sdk": "github:yycheng9264-glitch/Auth-SDK",
     "@vitejs/plugin-react": "^5.0.0",
     "lucide-react": "^0.468.0",
+    "qrcode": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "typescript": "^5.8.3",
     "vite": "^7.0.0"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
