@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { auth } from "./auth";
 import App from "./App";
+import "antd/dist/reset.css";
 import "./styles.css";
 
 auth.guard().then(() => {

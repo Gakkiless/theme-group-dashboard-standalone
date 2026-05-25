@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Button, Checkbox, DatePicker, Drawer, Input, Modal, Select, Table, Tag } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import dayjs, { type Dayjs } from "dayjs";
 import {
   ArrowRight,
   Hotel,
@@ -29,7 +32,7 @@ import type {
 
 const defaultFilters: ThemeGroupFilters = {
   keyword: "",
-  departureDate: "",
+  departureDateRange: ["", ""],
   series: [],
   themes: [],
   orderStatuses: [],
@@ -176,29 +179,32 @@ export default function ThemeGroupDashboard() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <label className="relative min-w-0 flex-1 sm:min-w-[360px]">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6b7280]" />
-                  <input
+                  <Input
+                    prefix={<Search className="h-5 w-5 text-[#6b7280]" />}
                     value={filters.keyword}
                     onChange={(event) => setFilters((current) => ({ ...current, keyword: event.target.value }))}
                     placeholder="搜索产品名称 / 产品编号 / 团单号"
-                    className="h-12 w-full rounded-lg border-2 border-[#cfd6e4] bg-white pl-12 pr-4 text-base shadow-sm outline-none transition focus:border-[#a43127] focus:shadow-[0_0_0_3px_rgba(164,49,39,0.12)]"
+                    allowClear
+                    size="large"
+                    className="w-full"
                   />
                 </label>
-                <button
-                  type="button"
+                <Button
+                  htmlType="button"
                   onClick={() => setFilters(defaultFilters)}
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127] sm:w-auto"
+                  icon={<X className="h-4 w-4" />}
+                  size="large"
+                  className="w-full sm:w-auto"
                 >
-                  <X className="h-4 w-4" />
                   重置
-                </button>
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 gap-3 text-base md:grid-cols-2 xl:grid-cols-4">
-                <DateFilterInput
+                <DateRangeFilterInput
                   label="团期出发日期"
-                  value={filters.departureDate}
-                  onChange={(value) => setFilters((current) => ({ ...current, departureDate: value }))}
+                  value={filters.departureDateRange}
+                  onChange={(value) => setFilters((current) => ({ ...current, departureDateRange: value }))}
                 />
                 <FilterMultiSelect
                   label="产品系列"
@@ -242,20 +248,16 @@ export default function ThemeGroupDashboard() {
             </div>
             <div className="flex flex-col gap-2 text-base sm:flex-row sm:items-center">
               <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127]">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={filters.showPastDepartures}
                   onChange={(event) => setFilters((current) => ({ ...current, showPastDepartures: event.target.checked }))}
-                  className="h-4 w-4 accent-[#a43127]"
                 />
                 展示历史团期
               </label>
               <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#d9dde2] bg-white px-4 text-base text-[#4b535c] transition hover:border-[#a43127] hover:text-[#a43127]">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={filters.showWaitShareOnly}
                   onChange={(event) => setFilters((current) => ({ ...current, showWaitShareOnly: event.target.checked }))}
-                  className="h-4 w-4 accent-[#a43127]"
                 />
                 仅显示待拼团
               </label>
@@ -365,7 +367,7 @@ export default function ThemeGroupDashboard() {
               )}
             </table>
           </div>
-          <MobileProductList
+          <MobileDepartureTable
             loading={loading}
             products={groupedProducts}
             onEdit={openRemarkEditor}
@@ -433,7 +435,13 @@ function ProductCell({ product, onEdit }: { product: ThemeGroupProduct; onEdit: 
   );
 }
 
-function MobileProductList({
+type MobileDepartureTableRow = {
+  key: string;
+  product: GroupedProduct;
+  departure: ThemeGroupDeparture;
+};
+
+function MobileDepartureTable({
   loading,
   products,
   onEdit,
@@ -442,136 +450,105 @@ function MobileProductList({
   products: GroupedProduct[];
   onEdit: (remark: EditableRemark) => void;
 }) {
-  if (loading) {
-    return (
-      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-5 py-10 text-center text-[#6d747c] lg:hidden">
-        <span className="flex h-14 w-14 items-center justify-center rounded-lg border border-[#f1c4bf] bg-[#fff8f6]">
-          <Loader2 className="h-6 w-6 animate-spin text-[#a43127]" />
-        </span>
-        <div>
-          <p className="font-medium text-[#1f2428]">正在拉取 2026 年主题团团期</p>
-          <p className="mt-1 text-sm text-[#7b838c]">接口数据量较大，正在自动分页聚合</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!products.length) {
-    return <div className="min-h-[260px] px-5 py-16 text-center text-base text-[#7b838c] lg:hidden">没有匹配的主题团</div>;
-  }
-
-  return (
-    <div className="space-y-3 bg-[#f5f7fb] p-3 lg:hidden">
-      {products.map((product) => (
-        <section key={product.id} className="overflow-hidden rounded-lg border border-[#e3e5e8] bg-white">
-          <div className="border-b border-[#eef0f3] p-4">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded bg-[#f5f6f8] px-2 py-1 text-xs text-[#6d747c]">{product.businessType}</span>
-              {product.seriesDesc ? <span className="rounded bg-[#fff8f6] px-2 py-1 text-xs text-[#a43127]">{product.seriesDesc}</span> : null}
-            </div>
-            <h2 className="text-lg font-semibold leading-7 text-[#15191d]">{product.name}</h2>
-            <div className="mt-2 space-y-1 text-sm leading-6 text-[#6d747c]">
-              <p className="font-mono text-base text-[#15191d]">{product.productCode}</p>
-              {product.themeDesc ? <p>产品主题：{product.themeDesc}</p> : null}
-            </div>
-            <div className="mt-3">
-              <p className="mb-1 text-sm font-medium text-[#6d747c]">产品备注</p>
-              <RemarkButton
-                value={product.productRemark}
-                onClick={() =>
-                  onEdit({
-                    objectType: "product",
-                    objectId: product.id,
-                    fieldName: "productRemark",
-                    title: "编辑产品备注",
-                    currentValue: product.productRemark,
-                    context: `${product.name} / ${product.productCode}`,
-                  })
-                }
-              />
-            </div>
+  const rows = products.flatMap((product) => product.departures.map((departure) => ({ key: departure.id, product, departure })));
+  const columns: ColumnsType<MobileDepartureTableRow> = [
+    {
+      title: "产品",
+      width: 260,
+      fixed: "left",
+      render: (_, row) => (
+        <div className="min-w-[220px]">
+          <div className="mb-1 flex flex-wrap gap-1">
+            <Tag>{row.product.businessType}</Tag>
+            {row.product.seriesDesc ? <Tag color="red">{row.product.seriesDesc}</Tag> : null}
           </div>
-          <div className="divide-y divide-[#eef0f3]">
-            {product.departures.map((departure) => (
-              <MobileDepartureItem
-                key={departure.id}
-                product={product}
-                departure={departure}
-                onEdit={onEdit}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-function MobileDepartureItem({
-  product,
-  departure,
-  onEdit,
-}: {
-  product: GroupedProduct;
-  departure: ThemeGroupDeparture;
-  onEdit: (remark: EditableRemark) => void;
-}) {
-  return (
-    <article className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-base font-semibold text-[#15191d]">{departure.orderNo}</p>
-          <p className="mt-1 text-sm text-[#6d747c]">{formatShortDate(departure.departureDate)} 出发</p>
+          <p className="mb-1 whitespace-normal text-sm font-semibold leading-5 text-[#15191d]">{row.product.name}</p>
+          <p className="font-mono text-xs text-[#6d747c]">{row.product.productCode}</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <DepartureStatusBadge departure={departure} />
-          <OrderStatusBadge departure={departure} />
+      ),
+    },
+    {
+      title: "团单号",
+      dataIndex: ["departure", "orderNo"],
+      width: 170,
+      render: (value: string) => <span className="font-mono">{value}</span>,
+    },
+    {
+      title: "出发日期",
+      width: 110,
+      render: (_, row) => formatShortDate(row.departure.departureDate),
+    },
+    {
+      title: "价格",
+      width: 180,
+      render: (_, row) => <PriceCell departure={row.departure} />,
+    },
+    {
+      title: "余位",
+      width: 90,
+      render: (_, row) => row.departure.remainingGuests,
+    },
+    {
+      title: "房间",
+      width: 140,
+      render: (_, row) => <RemainingRooms value={row.departure.remainingRooms} />,
+    },
+    {
+      title: "待拼",
+      width: 150,
+      render: (_, row) => row.departure.roomingText ? <WaitShareInfo value={row.departure.roomingText} /> : "-",
+    },
+    {
+      title: "顾问",
+      width: 100,
+      render: (_, row) => row.departure.consultant || "-",
+    },
+    {
+      title: "状态",
+      width: 120,
+      render: (_, row) => (
+        <div className="flex flex-col gap-1">
+          <DepartureStatusBadge departure={row.departure} />
+          <OrderStatusBadge departure={row.departure} />
         </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3">
-        <MobileField label="价格">
-          <PriceCell departure={departure} />
-        </MobileField>
-        <MobileField label="单房差">{formatMoney(departure.singleRoomSupplement)}</MobileField>
-        <MobileField label="已收人数">{departure.receivedGuests}</MobileField>
-        <MobileField label="余位人数">{departure.remainingGuests}</MobileField>
-        <MobileField label="预分配房间">{departure.allocatedRooms || "-"}</MobileField>
-        <MobileField label="余位房间">
-          <RemainingRooms value={departure.remainingRooms} />
-        </MobileField>
-        <MobileField label="待拼情况">{departure.roomingText ? <WaitShareInfo value={departure.roomingText} /> : "-"}</MobileField>
-        <MobileField label="负责顾问">{departure.consultant || "-"}</MobileField>
-      </div>
-
-      <div className="mt-4 rounded-lg bg-[#fafbfc] p-3">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-[#6d747c]">备注</span>
-          {departure.updatedAt ? <span className="text-xs text-[#9aa1a9]">{formatDateTime(departure.updatedAt)}</span> : null}
-        </div>
-        <RemarkButton
-          value={departure.operationRemark}
+      ),
+    },
+    {
+      title: "备注",
+      width: 120,
+      fixed: "right",
+      render: (_, row) => (
+        <Button
+          type="link"
           onClick={() =>
             onEdit({
               objectType: "departure",
-              objectId: departure.id,
+              objectId: row.departure.id,
               fieldName: "operationRemark",
               title: "编辑备注",
-              currentValue: departure.operationRemark,
-              context: `${product.name} / ${formatShortDate(departure.departureDate)} / ${departure.orderNo}`,
+              currentValue: row.departure.operationRemark,
+              context: `${row.product.name} / ${formatShortDate(row.departure.departureDate)} / ${row.departure.orderNo}`,
             })
           }
-        />
-      </div>
-    </article>
-  );
-}
+        >
+          {row.departure.operationRemark ? "查看/编辑" : "添加"}
+        </Button>
+      ),
+    },
+  ];
 
-function MobileField({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="min-w-0">
-      <p className="mb-1 text-xs text-[#8a929b]">{label}</p>
-      <div className="min-h-6 break-words text-sm font-medium leading-6 text-[#1f2428]">{children ?? "-"}</div>
+    <div className="bg-white lg:hidden">
+      <Table
+        rowKey="key"
+        loading={loading}
+        columns={columns}
+        dataSource={rows}
+        pagination={false}
+        scroll={{ x: 1450 }}
+        locale={{ emptyText: "没有匹配的主题团" }}
+        size="small"
+      />
     </div>
   );
 }
@@ -619,85 +596,86 @@ function RemarkDialog({
   const [content, setContent] = useState(remark.currentValue);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-      <section className="w-full max-w-[780px] rounded-xl border border-[#d8dde3] bg-white shadow-songtsam">
-        <header className="flex items-start justify-between border-b border-[#e3e5e8] px-6 py-5">
-          <div>
-            <h2 className="text-xl font-semibold">{remark.title}</h2>
-            <p className="mt-1 text-base text-[#6d747c]">{remark.context}</p>
-          </div>
-          <button type="button" onClick={onClose} className="p-1 text-[#6d747c] hover:text-[#a43127]">
-            <X className="h-5 w-5" />
-          </button>
-        </header>
-        <div className="grid gap-5 p-6 md:grid-cols-[1fr_300px]">
-          <div>
-            <label className="text-base font-medium">{remarkFieldText[remark.fieldName]}</label>
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              className="mt-2 h-56 w-full resize-none rounded-lg border border-[#d9dde2] p-4 text-base leading-7 outline-none focus:border-[#a43127]"
-              placeholder="请输入备注"
-            />
-            <div className="mt-3 flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="h-10 rounded-lg border border-[#d9dde2] bg-white px-5 text-base">
-                取消
-              </button>
-              <button
-                type="button"
-                onClick={() => onSubmit(content.trim())}
-                disabled={saving}
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#a43127] px-5 text-base text-white disabled:opacity-60"
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                保存
-              </button>
-            </div>
-          </div>
-          <aside className="rounded-lg border border-[#e3e5e8] bg-[#fafafa] p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="inline-flex items-center gap-2 text-base font-semibold">
-                <History className="h-4 w-4 text-[#a43127]" />
-                最近修改
-              </h3>
-              <button type="button" onClick={onViewAll} className="text-sm text-[#a43127]">
-                查看全部日志
-              </button>
-            </div>
-            {logs.length ? (
-              <div className="space-y-3">
-                {logs.map((log) => (
-                  <LogItem key={log.id} log={log} compact />
-                ))}
-              </div>
-            ) : (
-              <p className="text-base text-[#7b838c]">暂无修改记录</p>
-            )}
-          </aside>
+    <Modal
+      title={
+        <div>
+          <p className="text-xl font-semibold">{remark.title}</p>
+          <p className="mt-1 text-base font-normal text-[#6d747c]">{remark.context}</p>
         </div>
-      </section>
-    </div>
+      }
+      open
+      onCancel={onClose}
+      footer={null}
+      centered
+      width={780}
+    >
+      <div className="grid gap-5 pt-3 md:grid-cols-[1fr_300px]">
+        <div>
+          <label className="text-base font-medium">{remarkFieldText[remark.fieldName]}</label>
+          <Input.TextArea
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            className="mt-2"
+            placeholder="请输入备注"
+            rows={8}
+          />
+          <div className="mt-3 flex justify-end gap-2">
+            <Button htmlType="button" onClick={onClose}>
+              取消
+            </Button>
+            <Button
+              htmlType="button"
+              type="primary"
+              onClick={() => onSubmit(content.trim())}
+              loading={saving}
+              icon={saving ? undefined : <Save className="h-4 w-4" />}
+            >
+              保存
+            </Button>
+          </div>
+        </div>
+        <aside className="rounded-lg border border-[#e3e5e8] bg-[#fafafa] p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="inline-flex items-center gap-2 text-base font-semibold">
+              <History className="h-4 w-4 text-[#a43127]" />
+              最近修改
+            </h3>
+            <Button type="link" size="small" onClick={onViewAll}>
+              查看全部日志
+            </Button>
+          </div>
+          {logs.length ? (
+            <div className="space-y-3">
+              {logs.map((log) => (
+                <LogItem key={log.id} log={log} compact />
+              ))}
+            </div>
+          ) : (
+            <p className="text-base text-[#7b838c]">暂无修改记录</p>
+          )}
+        </aside>
+      </div>
+    </Modal>
   );
 }
 
 function LogsDrawer({ logs, onClose }: { logs: ThemeGroupLog[]; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end bg-black/20">
-      <section className="h-full w-full max-w-[520px] overflow-auto border-l border-[#d8dde3] bg-white shadow-songtsam">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e3e5e8] bg-white px-5 py-4">
-          <div>
-            <h2 className="text-lg font-semibold">备注修改日志</h2>
-            <p className="text-sm text-[#6d747c]">按修改时间倒序展示</p>
-          </div>
-          <button type="button" onClick={onClose} className="p-1 text-[#6d747c] hover:text-[#a43127]">
-            <X className="h-5 w-5" />
-          </button>
-        </header>
-        <div className="space-y-3 p-5">
-          {logs.length ? logs.map((log) => <LogItem key={log.id} log={log} />) : <p className="text-sm text-[#7b838c]">暂无日志</p>}
+    <Drawer
+      title={
+        <div>
+          <p className="text-lg font-semibold">备注修改日志</p>
+          <p className="text-sm font-normal text-[#6d747c]">按修改时间倒序展示</p>
         </div>
-      </section>
-    </div>
+      }
+      open
+      onClose={onClose}
+      width={520}
+    >
+      <div className="space-y-3">
+        {logs.length ? logs.map((log) => <LogItem key={log.id} log={log} />) : <p className="text-sm text-[#7b838c]">暂无日志</p>}
+      </div>
+    </Drawer>
   );
 }
 
@@ -727,13 +705,14 @@ function LogItem({ log, compact = false }: { log: ThemeGroupLog; compact?: boole
 
 function RemarkButton({ value, onClick }: { value: string; onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <Button
+      htmlType="button"
+      type="text"
       onClick={onClick}
       className="block min-h-8 w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-left text-base leading-5 text-[#1f2428] transition hover:border-[#a43127] hover:bg-[#fff8f6]"
     >
       {value ? <span className="line-clamp-3">{value}</span> : <span className="whitespace-nowrap text-[#a43127]">添加</span>}
-    </button>
+    </Button>
   );
 }
 
@@ -801,32 +780,28 @@ function DepartureStatusBadge({ departure }: { departure: ThemeGroupDeparture })
   return <span className={`inline-flex rounded-md px-2.5 py-1.5 text-sm font-medium ${className}`}>{departure.departureStatusText || departureStatusText[status]}</span>;
 }
 
-function DateFilterInput({
+const { RangePicker } = DatePicker;
+
+function DateRangeFilterInput({
   label,
   value,
   onChange,
 }: {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: [string, string];
+  onChange: (value: [string, string]) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const openPicker = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    if (typeof input.showPicker === "function") input.showPicker();
-    input.focus();
-  };
+  const pickerValue: [Dayjs, Dayjs] | null = value[0] && value[1] ? [dayjs(value[0]), dayjs(value[1])] : null;
 
   return (
-    <label className="flex cursor-pointer flex-col gap-1.5" onClick={openPicker}>
+    <label className="flex flex-col gap-1.5">
       <span className="text-sm text-[#6d747c]">{label}</span>
-      <input
-        ref={inputRef}
-        type="date"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 cursor-pointer rounded-lg border border-[#d9dde2] bg-white px-3 text-base outline-none transition focus:border-[#a43127] focus:shadow-[0_0_0_3px_rgba(164,49,39,0.12)]"
+      <RangePicker
+        value={pickerValue}
+        onChange={(_, dateStrings) => onChange([dateStrings[0], dateStrings[1]])}
+        className="w-full"
+        size="large"
+        allowClear
       />
     </label>
   );
@@ -843,34 +818,20 @@ function FilterMultiSelect({
   options: string[];
   onChange: (values: string[]) => void;
 }) {
-  const toggle = (value: string) => {
-    onChange(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
-  };
-
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm text-[#6d747c]">{label}</span>
-      <div className="flex min-h-11 flex-wrap gap-1.5 rounded-lg border border-[#d9dde2] bg-white p-1.5">
-        {options.length ? (
-          options.map((option) => {
-            const selected = values.includes(option);
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => toggle(option)}
-                className={`h-8 rounded-md border px-2.5 text-sm ${
-                  selected ? "border-[#a43127] bg-[#fff8f6] text-[#a43127]" : "border-transparent bg-[#f6f7f8] text-[#4b535c]"
-                }`}
-              >
-                {option}
-              </button>
-            );
-          })
-        ) : (
-          <span className="px-2 py-1 text-sm text-[#7b838c]">暂无选项</span>
-        )}
-      </div>
+      <Select
+        mode="multiple"
+        value={values}
+        options={options.map((option) => ({ label: option, value: option }))}
+        onChange={onChange}
+        placeholder={options.length ? "全部" : "暂无选项"}
+        maxTagCount="responsive"
+        size="large"
+        allowClear
+        className="w-full"
+      />
     </div>
   );
 }
@@ -886,44 +847,20 @@ function DropdownMultiSelect({
   options: string[];
   onChange: (values: string[]) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const toggle = (value: string) => {
-    onChange(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
-  };
-
   return (
-    <div className="relative flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5">
       <span className="text-sm text-[#6d747c]">{label}</span>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="flex h-11 items-center justify-between rounded-lg border border-[#d9dde2] bg-white px-3 text-left text-base outline-none transition hover:border-[#a43127]"
-      >
-        <span className="truncate">{values.length ? values.join("、") : "全部"}</span>
-        <span className="text-[#6d747c]">⌄</span>
-      </button>
-      {open ? (
-        <div className="absolute left-0 right-0 top-full z-40 mt-1 max-h-72 overflow-auto rounded-lg border border-[#d9dde2] bg-white p-2 shadow-songtsam">
-          {options.length ? (
-            options.map((option) => {
-              const selected = values.includes(option);
-              return (
-                <label key={option} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-base hover:bg-[#fff8f6]">
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => toggle(option)}
-                    className="h-4 w-4 accent-[#a43127]"
-                  />
-                  <span>{option}</span>
-                </label>
-              );
-            })
-          ) : (
-            <span className="block px-2 py-1 text-sm text-[#7b838c]">暂无选项</span>
-          )}
-        </div>
-      ) : null}
+      <Select
+        mode="multiple"
+        value={values}
+        options={options.map((option) => ({ label: option, value: option }))}
+        onChange={onChange}
+        placeholder={options.length ? "全部" : "暂无选项"}
+        maxTagCount="responsive"
+        size="large"
+        allowClear
+        className="w-full"
+      />
     </div>
   );
 }
@@ -975,7 +912,10 @@ function buildGroupedProducts(
           const departureMatchesKeyword =
             productMatchesKeyword ||
             departure.orderNo.toLowerCase().includes(keyword);
-          const dateMatches = !filters.departureDate || departure.departureDate === filters.departureDate;
+          const [departureStartDate, departureEndDate] = filters.departureDateRange;
+          const dateMatches =
+            (!departureStartDate || departure.departureDate >= departureStartDate) &&
+            (!departureEndDate || departure.departureDate <= departureEndDate);
           const openedMatches = departure.departureStatus === "opened";
           const historyMatches = filters.showPastDepartures || departure.departureDate >= today;
           const waitShareMatches = !filters.showWaitShareOnly || Boolean(departure.roomingText);

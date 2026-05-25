@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Button, DatePicker, Select } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { ArrowLeft, Hotel, Search } from "lucide-react";
 import AuthLogoutButton from "../components/AuthLogoutButton";
 import MobileQrButton from "../components/MobileQrButton";
@@ -84,15 +86,10 @@ export default function HotelInventoryPage() {
 
           <section className="rounded-lg border border-[#e5e7eb] bg-white p-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] sm:p-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <DateFilterInput
-                label="入住开始日期"
-                value={filters.checkInStart}
-                onChange={(value) => updateFilter({ checkInStart: value })}
-              />
-              <DateFilterInput
-                label="入住结束日期"
-                value={filters.checkInEnd}
-                onChange={(value) => updateFilter({ checkInEnd: value })}
+              <DateRangeFilterInput
+                label="入住起止日期"
+                value={[filters.checkInStart, filters.checkInEnd]}
+                onChange={(value) => updateFilter({ checkInStart: value[0], checkInEnd: value[1] })}
               />
               <SelectFilter
                 label="酒店"
@@ -112,14 +109,16 @@ export default function HotelInventoryPage() {
               />
             </div>
             <div className="mt-4 flex justify-end">
-              <button
-                type="button"
+              <Button
+                htmlType="button"
                 disabled
-                className="inline-flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-[#a43127] px-5 text-base text-white opacity-50 sm:w-auto"
+                type="primary"
+                icon={<Search className="h-4 w-4" />}
+                size="large"
+                className="w-full sm:w-auto"
               >
-                <Search className="h-4 w-4" />
                 查询
-              </button>
+              </Button>
             </div>
           </section>
         </div>
@@ -188,32 +187,28 @@ export default function HotelInventoryPage() {
   );
 }
 
-function DateFilterInput({
+const { RangePicker } = DatePicker;
+
+function DateRangeFilterInput({
   label,
   value,
   onChange,
 }: {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: [string, string];
+  onChange: (value: [string, string]) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const openPicker = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    if (typeof input.showPicker === "function") input.showPicker();
-    input.focus();
-  };
+  const pickerValue: [Dayjs, Dayjs] | null = value[0] && value[1] ? [dayjs(value[0]), dayjs(value[1])] : null;
 
   return (
-    <label className="flex cursor-pointer flex-col gap-1.5" onClick={openPicker}>
+    <label className="flex flex-col gap-1.5">
       <span className="text-sm text-[#6d747c]">{label}</span>
-      <input
-        ref={inputRef}
-        type="date"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 cursor-pointer rounded-lg border border-[#d9dde2] bg-white px-3 text-base outline-none transition focus:border-[#a43127] focus:shadow-[0_0_0_3px_rgba(164,49,39,0.12)]"
+      <RangePicker
+        value={pickerValue}
+        onChange={(_, dateStrings) => onChange([dateStrings[0], dateStrings[1]])}
+        className="w-full"
+        size="large"
+        allowClear
       />
     </label>
   );
@@ -237,19 +232,14 @@ function SelectFilter({
   return (
     <label className="flex flex-col gap-1.5">
       <span className="text-sm text-[#6d747c]">{label}</span>
-      <select
+      <Select
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
         disabled={options.length === 0}
-        className="h-11 rounded-lg border border-[#d9dde2] bg-white px-3 text-base outline-none transition disabled:cursor-not-allowed disabled:bg-[#f7f8fa] disabled:text-[#9aa1a9] focus:border-[#a43127] focus:shadow-[0_0_0_3px_rgba(164,49,39,0.12)]"
-      >
-        <option value="">{options.length ? placeholder : emptyText}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+        options={[{ label: options.length ? placeholder : emptyText, value: "" }, ...options.map((option) => ({ label: option, value: option }))]}
+        size="large"
+        className="w-full"
+      />
     </label>
   );
 }

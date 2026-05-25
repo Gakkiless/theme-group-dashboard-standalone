@@ -66,7 +66,7 @@ export type ThemeGroupLog = {
 
 export type ThemeGroupFilters = {
   keyword: string;
-  departureDate: string;
+  departureDateRange: [string, string];
   series: string[];
   themes: string[];
   orderStatuses: string[];
