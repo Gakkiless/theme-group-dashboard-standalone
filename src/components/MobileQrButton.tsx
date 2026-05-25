@@ -11,24 +11,13 @@ function isLocalUrl(value: string) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(value);
 }
 
-function getMobileBaseUrls() {
-  const configured = [
-    import.meta.env.VITE_MOBILE_BASE_URL,
-    import.meta.env.VITE_MOBILE_BASE_URLS,
-  ]
-    .filter(Boolean)
-    .flatMap((value) => String(value).split(","))
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  return Array.from(new Set([...configured, window.location.origin]));
+function getMobileBaseUrl() {
+  return import.meta.env.VITE_MOBILE_BASE_URL || window.location.origin;
 }
 
 export default function MobileQrButton() {
   const [open, setOpen] = useState(false);
-  const baseUrls = useMemo(() => getMobileBaseUrls(), []);
-  const [activeBaseUrl, setActiveBaseUrl] = useState(baseUrls[0] || window.location.origin);
-  const mobileUrl = useMemo(() => buildMobileUrl(activeBaseUrl), [activeBaseUrl]);
+  const mobileUrl = useMemo(() => buildMobileUrl(getMobileBaseUrl()), []);
   const [qrDataUrl, setQrDataUrl] = useState("");
 
   useEffect(() => {
@@ -65,22 +54,6 @@ export default function MobileQrButton() {
               </button>
             </header>
             <div className="flex flex-col items-center gap-4 px-5 py-6">
-              {baseUrls.length > 1 ? (
-                <div className="grid w-full grid-cols-1 gap-2">
-                  {baseUrls.map((baseUrl) => (
-                    <button
-                      key={baseUrl}
-                      type="button"
-                      onClick={() => setActiveBaseUrl(baseUrl)}
-                      className={`min-h-9 rounded-lg border px-3 py-2 text-left text-xs leading-5 ${
-                        activeBaseUrl === baseUrl ? "border-[#a43127] bg-[#fff8f6] text-[#a43127]" : "border-[#d9dde2] bg-white text-[#4b535c]"
-                      }`}
-                    >
-                      {baseUrl}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
               <div className="flex h-[260px] w-[260px] items-center justify-center rounded-lg border border-[#e3e5e8] bg-white">
                 {qrDataUrl ? <img src={qrDataUrl} alt="移动端访问二维码" className="h-60 w-60" /> : <span className="text-sm text-[#7b838c]">生成中</span>}
               </div>
@@ -88,7 +61,7 @@ export default function MobileQrButton() {
               {isLocalUrl(mobileUrl) ? (
                 <p className="text-center text-xs leading-5 text-[#a43127]">当前是本机地址，手机扫码可能无法访问。请在 `.env` 配置 `VITE_MOBILE_BASE_URL` 为局域网地址后重启前端服务。</p>
               ) : (
-                <p className="text-center text-xs leading-5 text-[#7b838c]">如果手机打开后一直加载，请切换上方另一个 Network 地址再扫码，并确认手机和电脑在同一网络或 VPN。</p>
+                <p className="text-center text-xs leading-5 text-[#7b838c]">请确认手机和电脑在同一网络或 VPN 环境。</p>
               )}
             </div>
           </section>
