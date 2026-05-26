@@ -598,7 +598,7 @@ function MobileMetricItem({ label, children }: { label: string; children: ReactN
   return (
     <div className="min-w-0 rounded-lg bg-[#fafbfc] px-2.5 py-2">
       <div className="flex min-h-6 items-start gap-2">
-        <span className="w-[4.5em] shrink-0 text-sm leading-6 text-[#7b838c]">{label}</span>
+        <span className="w-[5.5em] shrink-0 whitespace-nowrap text-sm leading-6 text-[#7b838c]">{label}</span>
         <div className="min-w-0 flex-1 break-words text-sm font-semibold leading-6 text-[#1f2428]">{children}</div>
       </div>
     </div>
