@@ -297,99 +297,6 @@ function formatWaitShare(row) {
     .join("；");
 }
 
-function mapRowsToHotelInventory(rows) {
-  return rows.map((row, index) => {
-    const rsvDate = formatDateOnly(firstValue(row, ["rsvDate"], ""));
-    const hotelCode = String(firstValue(row, ["hotelCode"], ""));
-    const roomTypeCode = String(firstValue(row, ["rmtype", "roomTypeCode"], ""));
-
-    return {
-      id: uniqueStrings([rsvDate, hotelCode, roomTypeCode, String(index)]).join("-"),
-      rsvDate,
-      hotelCode,
-      hotelName: String(firstValue(row, ["hotelName"], "")),
-      hotelShortName: String(firstValue(row, ["hotelShortName"], "")),
-      roomTypeCode,
-      roomTypeName: String(firstValue(row, ["rmtypeName", "roomTypeName"], "")),
-      publicPoolNum: numberValue(row, ["publicPoolNum"], 0),
-      blockAvailNum: numberValue(row, ["blockAvailNum"], 0),
-      preAllocationNum: numberValue(row, ["preAllocationNum"], 0),
-      preOccupiedNum: numberValue(row, ["preOccupiedNum"], 0),
-      realOccupiedNum: numberValue(row, ["realOccupiedNum"], 0),
-      pmsTotalNum: numberValue(row, ["pmsTotalNum"], 0),
-      oooNum: numberValue(row, ["oooNum"], 0),
-    };
-  });
-}
-
-async function fetchHotelInventoryRows(input, req) {
-  const hotelCodes = Array.isArray(input?.hotelCodes) ? input.hotelCodes.map(String).filter(Boolean) : [];
-  const beginDate = formatDateOnly(input?.beginDate);
-  const endDate = formatDateOnly(input?.endDate);
-
-  if (!beginDate || !endDate) {
-    throw new Error("beginDate and endDate are required");
-  }
-
-  const headers = { "Content-Type": "application/json" };
-  if (req.headers.authorization) headers.Authorization = req.headers.authorization;
-  if (req.headers.cookie) headers.Cookie = req.headers.cookie;
-
-  const response = await fetch(SONGTSAM_HOTEL_INVENTORY_URL, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      hotelGroupCode: HOTEL_GROUP_CODE,
-      hotelCodes: hotelCodes.length ? hotelCodes : DEFAULT_HOTEL_CODES,
-      beginDate,
-      endDate,
-      unitCode: HOTEL_GROUP_CODE,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`queryHotelInventory ${response.status}: ${errorText}`);
-  }
-
-  const payload = await response.json();
-  return {
-    payload,
-    rows: collectRows(payload),
-    query: {
-      hotelGroupCode: HOTEL_GROUP_CODE,
-      hotelCodes: hotelCodes.length ? hotelCodes : DEFAULT_HOTEL_CODES,
-      beginDate,
-      endDate,
-      unitCode: HOTEL_GROUP_CODE,
-    },
-  };
-}
-
-async function handleHotelInventory(req, res) {
-  try {
-    const body = await readJsonBody(req);
-    const { payload, rows, query } = await fetchHotelInventoryRows(body, req);
-
-    return jsonResponse(res, 200, {
-      ok: true,
-      source: "inventory-board/query",
-      query,
-      rows: mapRowsToHotelInventory(rows),
-      rawShape: {
-        topLevelKeys: payload && typeof payload === "object" ? Object.keys(payload) : [],
-        rowCount: rows.length,
-        firstRowKeys: rows[0] && typeof rows[0] === "object" ? Object.keys(rows[0]) : [],
-      },
-    });
-  } catch (error) {
-    return jsonResponse(res, 500, {
-      ok: false,
-      error: error.message,
-    });
-  }
-}
-
 function isExcludedThemeGroupRow(row) {
   const title = String(firstValue(row, ["title", "travelTypeDesc", "productName"], ""));
   const travelGroupCode = String(firstValue(row, ["travelGroupCode", "groupCode"], ""));
@@ -619,21 +526,12 @@ const PORT = Number(process.env.PORT || 3000);
 const SONGTSAM_THEME_GROUP_DASHBOARD_URL =
   process.env.SONGTSAM_THEME_GROUP_DASHBOARD_URL ||
   "https://test-gds.songtsam.com/product-journey/api/travelGroup/listTravelGroupDashboard";
-const SONGTSAM_HOTEL_INVENTORY_URL =
-  process.env.SONGTSAM_HOTEL_INVENTORY_URL ||
-  "https://test-api.songtsam.com/tool-api/inventory-board/query";
-const HOTEL_GROUP_CODE = process.env.HOTEL_GROUP_CODE || "SONGTSAM-CS";
-const DEFAULT_HOTEL_CODES = uniqueStrings((process.env.HOTEL_CODES || "STML-CS").split(","));
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === "POST" && url.pathname === "/api/theme-groups/dashboard") {
     return handleDashboard(req, res);
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/hotel-inventory/query") {
-    return handleHotelInventory(req, res);
   }
 
   if (req.method === "POST" && url.pathname === "/api/theme-groups/remarks/update") {
